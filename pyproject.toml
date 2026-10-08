@@ -1,0 +1,26 @@
+[project]
+name = "guad-agent-handmade"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Sambit Kanjilal", email = "1sambitkanjilal1@gmail.com" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "langchain>=1.4.8",
+    "langchain-anthropic>=1.7.7",
+    "langchain-chroma>=1.1.0",
+    "langchain-ollama>=1.1.0",
+    "langgraph>=1.2.19",
+    "neo4j>=6.4.1",
+    "pydantic>=2.14.2",
+    "python-dotenv>=1.2.4",
+]
+
+[project.scripts]
+guad-agent-handmade = "guad_agent_handmade:main"
+
+[build-system]
+requires = ["uv_build>=0.13.6,<0.14.0"]
+build-backend = "uv_build"
