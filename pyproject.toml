@@ -8,12 +8,16 @@ authors = [
 ]
 requires-python = ">=3.14"
 dependencies = [
+    "cachetools>=7.2.8",
+    "httpx>=0.28.1",
     "langchain>=1.4.8",
     "langchain-anthropic>=1.7.7",
     "langchain-chroma>=1.1.0",
     "langchain-ollama>=1.1.0",
     "langgraph>=1.2.19",
     "neo4j>=6.4.1",
+    "playwright>=1.64.1",
+    "psycopg2-binary>=2.9.13",
     "pydantic>=2.14.2",
     "python-dotenv>=1.2.4",
 ]

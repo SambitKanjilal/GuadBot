@@ -11,6 +11,7 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
 from neo4j import GraphDatabase
 from pydantic import BaseModel, Field
+from scraper import get_part_info
 
 load_dotenv()
 
@@ -25,11 +26,13 @@ neo4j_driver = GraphDatabase.driver(
 )
 
 
+
 class AgentState(TypedDict):
     messages: Annotated[list, add_messages]
     parts: list[str]
     rag_context: str
     neo4j_context: str
+    api_context: str
 
 
 class ExtractedParts(BaseModel):
@@ -90,11 +93,20 @@ def retrieve_neo4j(state: AgentState):
     return {"neo4j_context": "Assembly connections:\n" + "\n".join(lines)}
 
 
+def retrieve_api(state: AgentState):
+    parts = state["parts"]
+    if not parts:
+        return {"api_context": ""}
+    results = [f"[{p}]\n{get_part_info(p)}" for p in parts]
+    return {"api_context": "\n\n".join(results)}
+
+
 def synthesize(state: AgentState):
     system = (
         "You are a helpful assistant. Answer the user's question using the context below.\n\n"
         f"## Internal Documentation\n{state['rag_context']}\n\n"
-        f"## Assembly Graph\n{state['neo4j_context']}"
+        f"## Assembly Graph\n{state['neo4j_context']}\n\n"
+        f"## Distributor Listings\n{state['api_context']}"
     )
     response = llm.invoke([{"role": "system", "content": system}] + state["messages"])
     return {"messages": [response]}
@@ -105,13 +117,16 @@ graph_builder = StateGraph(AgentState)
 graph_builder.add_node(extract_parts)
 graph_builder.add_node(retrieve_rag)
 graph_builder.add_node(retrieve_neo4j)
+graph_builder.add_node(retrieve_api)
 graph_builder.add_node(synthesize)
 
 graph_builder.add_edge(START, "extract_parts")
 graph_builder.add_edge("extract_parts", "retrieve_rag")
 graph_builder.add_edge("extract_parts", "retrieve_neo4j")
+graph_builder.add_edge("extract_parts", "retrieve_api")
 graph_builder.add_edge("retrieve_rag", "synthesize")
 graph_builder.add_edge("retrieve_neo4j", "synthesize")
+graph_builder.add_edge("retrieve_api", "synthesize")
 graph_builder.add_edge("synthesize", END)
 
 graph = graph_builder.compile(checkpointer=InMemorySaver())
